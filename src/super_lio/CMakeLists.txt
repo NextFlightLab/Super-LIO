@@ -21,7 +21,8 @@ find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
-find_package(pcl_ros REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(pcl_conversions REQUIRED)
 find_package(livox_ros_driver2 REQUIRED)
 
 find_package(Eigen3 REQUIRED NO_MODULE)
@@ -62,7 +63,8 @@ ament_target_dependencies(lio PUBLIC
   sensor_msgs
   visualization_msgs
   nav_msgs
-  pcl_ros
+  tf2_ros
+  pcl_conversions
   livox_ros_driver2
   basic
   rosidl_default_runtime
