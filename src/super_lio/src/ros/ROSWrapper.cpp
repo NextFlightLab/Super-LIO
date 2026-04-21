@@ -437,6 +437,7 @@ void ROSWrapper::livoxHandler(const livox_ros_driver2::msg::CustomMsg::SharedPtr
   }
   lidar_data.start_time = stampToSec(msg->header.stamp);
   lidar_data.end_time   = lidar_data.start_time + offset_time;
+  last_lidar_msg_stamp_ = lidar_data.start_time;
   lidar_buffer_.push_back(lidar_data);
 }
 
@@ -501,7 +502,37 @@ void ROSWrapper::stdMsgHandler(const sensor_msgs::msg::PointCloud2::SharedPtr ms
       lidar_data.pc->emplace_back(
           pt.x, pt.y, pt.z, pt.intensity, pt.time);
     }
-    lidar_data.end_time = lidar_data.start_time + lidar_data.pc->points.back().offset_time;
+    if (!lidar_data.pc->empty()) {
+      lidar_data.end_time = lidar_data.start_time +
+                            lidar_data.pc->points.back().offset_time;
+    }
+    break;
+  }
+  case LID_TYPE::LS16:
+  {
+    pcl::PointCloud<LivoxSIM::Point> pl_orig;
+    pcl::fromROSMsg(*msg, pl_orig);
+    lidar_data.pc->reserve(pl_orig.size() / g_filter_rate + 1);
+    lidar_data.start_time = stampToSec(msg->header.stamp);
+
+    double scan_period = 0.1;
+    if (last_lidar_msg_stamp_ > 0.0 &&
+        lidar_data.start_time > last_lidar_msg_stamp_) {
+      scan_period = lidar_data.start_time - last_lidar_msg_stamp_;
+      if (scan_period < 1e-3) scan_period = 1e-3;
+      if (scan_period > 0.2)  scan_period = 0.2;
+    }
+
+    const double denom =
+        static_cast<double>(pl_orig.size() > 1 ? pl_orig.size() - 1 : 1);
+    for (std::size_t i = 0; i < pl_orig.size(); i += g_filter_rate) {
+      auto& pt = pl_orig.points[i];
+      if (!validPoint(pt.x, pt.y, pt.z)) continue;
+      offset_time = scan_period * static_cast<double>(i) / denom;
+      lidar_data.pc->emplace_back(
+          pt.x, pt.y, pt.z, pt.intensity, offset_time);
+    }
+    lidar_data.end_time = lidar_data.start_time + offset_time;
     break;
   }
   case OUSTER:
@@ -524,7 +555,9 @@ void ROSWrapper::stdMsgHandler(const sensor_msgs::msg::PointCloud2::SharedPtr ms
   default:
     return;
   }
-  
+
+  if (lidar_data.pc->empty()) return;
+  last_lidar_msg_stamp_ = lidar_data.start_time;
   lidar_buffer_.push_back(lidar_data);
 }
 

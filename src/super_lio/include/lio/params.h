@@ -41,7 +41,7 @@ namespace LI2Sup{
   extern std::string g_imu_topic;
   extern std::string g_lidar_topic;
 
-  extern int   g_lidar_type;       // 1: mid360, 2: hesai16, 3: velo16, 4: velo32, 5: vel_nclt, 6: ls16 
+  extern int   g_lidar_type;       // 1: livox custom msg, 2: hesai16, 3: velo16, 4: velo32, 5: vel_nclt, 6: gz sim pointcloud2, 7: ouster
   extern float g_blind2;
   extern float g_maxrange2;
   extern int   g_filter_rate;

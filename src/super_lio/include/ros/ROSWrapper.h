@@ -63,6 +63,7 @@ public:
     lidar_pushed_ = false;
     last_timestamp_imu_ = -1.0;
     last_timestamp_lidar_ = -1.0;
+    last_lidar_msg_stamp_ = -1.0;
   }
 
   void pub_odom(const NavState&);
@@ -103,6 +104,7 @@ private:
   bool lidar_pushed_ = false;
   double last_timestamp_imu_ = -1.0;
   double last_timestamp_lidar_ = -1.0;
+  double last_lidar_msg_stamp_ = -1.0;
 
   ESKF::Ptr eskf_{nullptr};
 
